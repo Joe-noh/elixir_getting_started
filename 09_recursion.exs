@@ -16,10 +16,4 @@ defmodule Recursion do
   test "Recursion" do
     assert MyModule.sum([1, 2, 3]) == 6
   end
-
-  test "Mapping" do
-    assert Enum.reduce([1, 2, 3], 0, fn(x, acc) -> x + acc end) == 6
-    assert Enum.reduce([1, 2, 3], 0, &(&1 + &2)) == 6
-    assert Enum.reduce([1, 2, 3], 0, &+/2) == 6
-  end
 end
