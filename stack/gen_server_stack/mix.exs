@@ -4,7 +4,7 @@ defmodule StackServer.Mixfile do
   def project do
     [app: :stack_server,
      version: "0.0.1",
-     elixir: "~> 0.14.4-dev",
+     elixir: ">= 1.0.0",
      deps: deps]
   end
 

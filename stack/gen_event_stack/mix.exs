@@ -4,7 +4,7 @@ defmodule GenEventStack.Mixfile do
   def project do
     [app: :gen_event_stack,
      version: "0.0.1",
-     elixir: "~> 0.14.4-dev",
+     elixir: ">= 1.0.0",
      deps: deps]
   end
 
