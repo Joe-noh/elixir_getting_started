@@ -16,7 +16,7 @@ defmodule AliasRequireImport do
 
   test "Require" do
     require Integer  # CompileError will be thrown without this
-    assert Integer.odd?(3) == true
+    assert Integer.is_odd(3) == true
   end
 
   test "Import" do

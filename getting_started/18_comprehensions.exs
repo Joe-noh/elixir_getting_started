@@ -10,7 +10,7 @@ defmodule Conprehensions do
     assert (for {:good, n} <- values, do: n * n) == [1, 4, 16]
 
     require Integer
-    assert (for n <- 1..4, Integer.odd?(n), do: n * n) == [1, 9]
+    assert (for n <- 1..4, Integer.is_odd(n), do: n * n) == [1, 9]
 
     assert (for i <- 1..2, j <- 3..4, do: i * j) == [3, 4, 6, 8]
   end
