@@ -31,8 +31,11 @@ defmodule KittyServerTest do
 
   test "close shop" do
     pid = KittyServer.open_shop
-    KittyServer.close_shop(pid)
 
+    assert :ok == KittyServer.close_shop(pid)
+    :timer.sleep 100  # wait for termination
+
+    assert Process.alive?(pid) == false
     catch_exit KittyServer.order_cat(pid, "mike", "white", "pretty")
   end
 end
