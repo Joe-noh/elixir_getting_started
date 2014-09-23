@@ -1,3 +1,3 @@
-defmodule SupervisedBand.Player do
+defmodule SupervisedBand.Profile do
   defstruct name: "", role: nil, skill: :good
 end

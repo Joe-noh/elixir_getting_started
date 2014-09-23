@@ -1,6 +1,6 @@
 defmodule SupervisedBand.Musician do
   use GenServer
-  alias SupervisedBand.Player
+  alias SupervisedBand.Profile
 
   @delay 750
 
@@ -22,10 +22,10 @@ defmodule SupervisedBand.Musician do
 
     IO.puts "Musician #{name}, playing the #{role_str} entered the room."
 
-    {:ok, %Player{name: name, role: role_str, skill: skill}, time_to_play}
+    {:ok, %Profile{name: name, role: role_str, skill: skill}, time_to_play}
   end
 
-  def handle_call(:stop, _from, player=%Player{}) do
+  def handle_call(:stop, _from, player=%Profile{}) do
     {:stop, :normal, :ok, player}
   end
 
@@ -37,12 +37,12 @@ defmodule SupervisedBand.Musician do
     {:noreply, player, @delay}
   end
 
-  def handle_info(:timeout, player=%Player{name: name, skill: :good}) do
+  def handle_info(:timeout, player=%Profile{name: name, skill: :good}) do
     IO.puts "#{name} produced sound!"
     {:noreply, player, @delay}
   end
 
-  def handle_info(:timeout, player=%Player{name: name, skill: :bad}) do
+  def handle_info(:timeout, player=%Profile{name: name, skill: :bad}) do
     case rand(1, 5) do
       1 ->
         IO.puts "#{name} produced false note. Uh oh"
@@ -57,20 +57,20 @@ defmodule SupervisedBand.Musician do
     {:noreply, player, @delay}
   end
 
-  def terminate(:normal, %Player{name: name, role: role}) do
+  def terminate(:normal, %Profile{name: name, role: role}) do
     IO.puts "#{name} left the room #{role}"
   end
 
-  def terminate(:bad_note, %Player{name: name, role: role}) do
+  def terminate(:bad_note, %Profile{name: name, role: role}) do
     IO.puts "#{name} sucks! kicked that member out of the band! #{role}"
   end
 
-  def terminate(:shutdown, %Player{name: name}) do
+  def terminate(:shutdown, %Profile{name: name}) do
     IO.puts "The manager is mad and fired the whole band!"
     IO.puts "#{name} just got back to playing in the subway"
   end
 
-  def terminate(_reason, %Player{name: name, role: role}) do
+  def terminate(_reason, %Profile{name: name, role: role}) do
     IO.puts "#{name} has benn kicked out #{role}"
   end
 
