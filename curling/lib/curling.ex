@@ -1,0 +1,2 @@
+defmodule Curling do
+end
