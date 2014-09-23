@@ -41,4 +41,22 @@ defmodule CurlingTest do
 
     refute_receive {Curling.Feed, {:add_points, "TeamA", 2}}
   end
+
+  test "game_info" do
+    {:ok, pid} = Curling.start_link("TeamA", "TeamB")
+
+    {teams, {:round, round}} = Curling.game_info(pid)
+    assert {"TeamA", 0} in teams
+    assert {"TeamB", 0} in teams
+    assert round == 0
+
+    Curling.add_points(pid, "TeamA", 3)
+    Curling.next_round pid
+    Curling.next_round pid
+
+    {teams, {:round, round}} = Curling.game_info(pid)
+    assert {"TeamA", 3} in teams
+    assert {"TeamB", 0} in teams
+    assert round == 2
+  end
 end

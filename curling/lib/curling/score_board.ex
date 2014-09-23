@@ -36,8 +36,4 @@ defmodule Curling.ScoreBoard do
     IO.puts "Scoreboard: increased score of team #{team} by 1"
     do_add_points(team, point-1)
   end
-
-  defp do_reset_board do
-    IO.puts "Scoreboard: all teams are undefined and all scores are 0"
-  end
 end

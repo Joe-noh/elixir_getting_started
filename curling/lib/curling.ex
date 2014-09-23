@@ -2,7 +2,8 @@ defmodule Curling do
   def start_link(team_a, team_b) do
     {:ok, pid} = GenEvent.start_link
 
-    GenEvent.add_handler(pid, Curling.ScoreBoard, [])
+    GenEvent.add_handler(pid, Curling.ScoreBoard,  [])
+    GenEvent.add_handler(pid, Curling.Accumulator, [])
     set_teams(pid, team_a, team_b)
 
     {:ok, pid}
@@ -28,5 +29,9 @@ defmodule Curling do
 
   def leave_feed(pid, handler_id) do
     GenEvent.remove_handler(pid, handler_id, :leave_feed)
+  end
+
+  def game_info(pid) do
+    GenEvent.call(pid, Curling.Accumulator, :game_info)
   end
 end

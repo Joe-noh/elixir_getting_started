@@ -1,6 +1,5 @@
 defmodule FeedTest do
   use ExUnit.Case
-
   alias Curling.Feed
 
   test "init" do
