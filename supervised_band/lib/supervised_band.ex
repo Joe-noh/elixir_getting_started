@@ -2,42 +2,42 @@ defmodule SupervisedBand do
   use Application
 
   def start(_type, manager) do
-    import Supervisor.Spec, warn: false
-
     IO.puts "Our manager is #{manager}."
 
     Supervisor.start_link(children, opts(manager))
   end
 
   defp children do
+    import Supervisor.Spec, warn: false
+
     [
-      {:singer,
-       {SupervisedBand.Musician, :start_link, [:singer, :good]},
-       :permanent,
-       1000,
-       :worker,
-       [SupervisedBand.Musician]},
+      worker(SupervisedBand.Musician,
+             [:singer, :good],
+             id: :singer,
+             restart:  :permanent,
+             shutdown: 1000,
+             modules:  [SupervisedBand.Musician]),
 
-      {:bass,
-       {SupervisedBand.Musician, :start_link, [:bass, :good]},
-       :temporary,
-       1000,
-       :worker,
-       [SupervisedBand.Musician]},
+      worker(SupervisedBand.Musician,
+             [:bass, :good],
+             id: :bass,
+             restart:  :temporary,
+             shutdown: 1000,
+             modules:  [SupervisedBand.Musician]),
 
-      {:drum,
-       {SupervisedBand.Musician, :start_link, [:drum, :bad]},
-       :transient,
-       1000,
-       :worker,
-       [SupervisedBand.Musician]},
+      worker(SupervisedBand.Musician,
+             [:drum, :bad],
+             id: :drum,
+             restart:  :transient,
+             shutdown: 1000,
+             modules:  [SupervisedBand.Musician]),
 
-      {:keyter,
-       {SupervisedBand.Musician, :start_link, [:keyter, :good]},
-       :transient,
-       1000,
-       :worker,
-       [SupervisedBand.Musician]}
+      worker(SupervisedBand.Musician,
+             [:keyter, :good],
+             id: :keyter,
+             restart:  :temporary,
+             shutdown: 1000,
+             modules:  [SupervisedBand.Musician])
     ]
   end
 
