@@ -1,19 +1,45 @@
 defmodule Ppool do
-  use Application
+  @doc """
+       Ppool.SuperSupervisor
+                 |
+                 |
+          Ppool.Supervisor
+            /          \
+           /            \
+    Ppool.Server   Ppool.WorkerSupervisor
+                     /                \
+                    /                  \
+               Ppool.Worker        Ppool.Worker
+  """
 
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
-  # for more information on OTP Applications
-  def start(_type, _args) do
-    import Supervisor.Spec, warn: false
+  alias Ppool.SuperSupervisor, as: SupSup
+  alias Ppool.Server
 
-    children = [
-      # Define workers and child supervisors to be supervised
-      # worker(Ppool.Worker, [arg1, arg2, arg3])
-    ]
+  def start_link do
+    SupSup.start_link
+  end
 
-    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Ppool.Supervisor]
-    Supervisor.start_link(children, opts)
+  def stop do
+    SupSup.stop
+  end
+
+  def start_pool(name, limit, mfa) do
+    SupSup.start_pool(name, limit, mfa)
+  end
+
+  def stop_pool(name) do
+    SupSup.stop_pool(name)
+  end
+
+  def run(name, args) do
+    Server.run(name, args)
+  end
+
+  def async_queue(name, args) do
+    Server.async_queue(name, args)
+  end
+
+  def sync_queue(name, args) do
+    Server.sync_queue(name, args)
   end
 end
