@@ -18,11 +18,10 @@ defmodule SupervisedBand.Musician do
     :random.seed(:os.timestamp())
     time_to_play = rand(1000, 3000)
     name = pick_name
-    role_str = Atom.to_string(role)
 
-    IO.puts "Musician #{name}, playing the #{role_str} entered the room."
+    IO.puts "Musician #{name}, playing the #{role} entered the room."
 
-    {:ok, %Profile{name: name, role: role_str, skill: skill}, time_to_play}
+    {:ok, %Profile{name: name, role: role, skill: skill}, time_to_play}
   end
 
   def handle_call(:stop, _from, player=%Profile{}) do
