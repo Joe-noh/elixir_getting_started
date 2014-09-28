@@ -4,7 +4,7 @@ defmodule SupervisedBand.Mixfile do
   def project do
     [app: :supervisored_band,
      version: "0.0.1",
-     elixir: "~> 1.1.0-dev",
+     elixir: ">= 1.0.0",
      deps: deps]
   end
 
