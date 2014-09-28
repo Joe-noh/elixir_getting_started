@@ -7,8 +7,8 @@ defmodule Ppool.WorkerSupervisor do
 
   def init(mfa = {module, _, _}) do
     children = [
-      worker(Ppool.Worker,
-             mfa,
+      worker(module,
+             [],
              restart:  :temporary,
              shutdown: 5000,
              modules:  [module])

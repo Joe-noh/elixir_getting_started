@@ -16,7 +16,7 @@ defmodule Ppool.SuperSupervisor do
 
   def start_pool(name, limit, mfa) do
     child = supervisor(Ppool.Supervisor,
-                       [{name, limit, mfa}],
+                       [name, limit, mfa],
                        restart:  :permanent,
                        shutdown: 10500,
                        modules:  [Ppool.Supervisor])

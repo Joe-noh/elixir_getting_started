@@ -6,11 +6,11 @@ defmodule Ppool.Server do
   end
 
   def start(name, limit, pool_sup, mfa) when is_atom(name) and is_integer(limit) do
-    GenServer.start(__MODULE__, [limit, mfa, pool_sup], name: name)
+    GenServer.start(__MODULE__, {limit, mfa, pool_sup}, name: name)
   end
 
   def start_link(name, limit, pool_sup, mfa) when is_atom(name) and is_integer(limit) do
-    GenServer.start_link(__MODULE__, [limit, mfa, pool_sup], name: name)
+    GenServer.start_link(__MODULE__, {limit, mfa, pool_sup}, name: name)
   end
 
   def run(name, args) do
@@ -29,26 +29,20 @@ defmodule Ppool.Server do
     GenServer.stop(name, :stop)
   end
 
-  defmacrop spec(mfa)do
-    quote do
-      Supervisor.Spec.supervisor(Ppool.WorkerSupervisor,
-                 [unquote mfa],
-                 restart:  :temporary,
-                 shutdown: 10000,
-                 modules:  [Ppool.WorkerSupervisor])
-    end
+  defp spec(mfa) do
+    Supervisor.Spec.supervisor(Ppool.WorkerSupervisor,
+                               [mfa],
+                               restart:  :temporary,
+                               shutdown: 10000,
+                               modules:  [Ppool.WorkerSupervisor])
   end
 
-  def init([limit, mfa, worker_sup]) do
+  def init({limit, mfa, worker_sup}) do
     send(self, {:start_worker_sup, worker_sup, mfa})
     {:ok, %State{limit: limit, refs: HashSet.new}}
   end
 
-  def handle_call(
-        {:run, args},
-        _from,
-        state = %State{limit: limit, sup: sup, refs: refs}
-      ) when limit > 0 do
+  def handle_call({:run, args}, _from, state = %State{limit: limit, sup: sup, refs: refs}) when limit > 0 do
     {:ok, pid} = Supervisor.start_child(sup, args)
     ref = Process.monitor(pid)
     {:reply, {:ok, pid}, %State{state | limit: limit-1, refs: HashSet.put(refs, ref)}}
@@ -58,11 +52,7 @@ defmodule Ppool.Server do
     {:reply, :noalloc, state}
   end
 
-  def handle_call(
-        {:sync, args},
-        _from,
-        state = %State{limit: limit, sup: sup, refs: refs}
-      ) when limit > 0 do
+  def handle_call({:sync, args}, _from, state = %State{limit: limit, sup: sup, refs: refs}) when limit > 0 do
     {:ok, pid} = Supervisor.start_child(sup, args)
     ref = Process.monitor(pid)
     {:reply, {:ok, pid}, %State{state | limit: limit-1, refs: HashSet.put(refs, ref)}}
@@ -76,23 +66,20 @@ defmodule Ppool.Server do
     {:stop, :normal, :ok, state}
   end
 
-  def handle_cast(
-        {:async, args},
-        state = %State{limit: limit, sup: sup, refs: refs}
-      ) when limit > 0 do
+  def handle_cast({:async, args}, state = %State{limit: limit, sup: sup, refs: refs}) when limit > 0 do
     {:ok, pid} = Supervisor.start_child(sup, args)
     ref = Process.monitor(pid)
-    {:noreply, {:ok, pid}, %State{state | limit: limit-1, refs: HashSet.put(refs, ref)}}
+    {:noreply, %State{state | limit: limit-1, refs: HashSet.put(refs, ref)}}
   end
 
   def handle_cast({:async, args}, state = %State{queue: queue}) do
     {:noreply, %State{state | queue: [args | queue]}}
   end
 
-  def handle_info({:start_worker_sup, worker_sup, mfa}, _state) do
+  def handle_info({:start_worker_sup, worker_sup, mfa}, state) do
     {:ok, pid} = Supervisor.start_child(worker_sup, spec(mfa))
     Process.link(pid)
-    {:noreply, %State{sup: pid}}
+    {:noreply, %State{state | sup: pid}}
   end
 
   def handle_info({:DOWN, ref, _process, _pid, _}, state = %State{refs: refs}) do
@@ -103,23 +90,22 @@ defmodule Ppool.Server do
     end
   end
 
-  defp handle_down_worker(ref, state = %State{limit: limit, sup: sup, refs: refs}) do
-    case (Enum.reverse(refs) |> hd) do
-      {{_, {from, args}}, queue} ->
+  defp handle_down_worker(ref, state = %State{limit: limit, refs: refs, queue: []}) do
+    {:noreply, %State{state | limit: limit+1, refs: HashSet.delete(refs, ref)}}
+  end
+
+  defp handle_down_worker(ref, state = %State{limit: limit, sup: sup, refs: refs, queue: queue}) do
+    [head | rest] = Enum.reverse(queue)
+    case head do
+      {from, args} ->
         {:ok, pid} = Supervisor.start_child(sup, args)
-        new_refs = refs
-          |> HashSet.delete(ref)
-          |> HashSet.put(Process.monitor pid)
+        new_refs = refs |> HashSet.delete(ref) |> HashSet.put(Process.monitor pid)
         GenServer.reply(from, {:ok, pid})
-        {:noreply, %State{refs: new_refs, queue: queue}}
-      {{_, args}, queue} ->
+        {:noreply, %State{state | refs: new_refs, queue: Enum.reverse(rest)}}
+      args ->
         {:ok, pid} = Supervisor.start_child(sup, args)
-        new_refs = refs
-          |> HashSet.delete(ref)
-          |> HashSet.put(Process.monitor pid)
-        {:noreply, %State{refs: new_refs, queue: queue}}
-      {:empty, _} ->
-        {:noreply, %State{state | limit: limit+1, refs: HashSet.delete(refs, ref)}}
+        new_refs = refs |> HashSet.delete(ref) |> HashSet.put(Process.monitor pid)
+        {:noreply, %State{state | refs: new_refs, queue: Enum.reverse(rest)}}
     end
   end
 end
